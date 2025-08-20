@@ -96,13 +96,13 @@ const getMkvDownloadUrls = ($) => {
 const getPrevEpisode = ($) => {
     if (!$('.flir a:first').attr('href')?.includes(`/episode/`)) return null;
     var nextEps = $('.flir a:first').attr('href');
-    nextEps = nextEps.split('/episode/')[1];
+    nextEps = nextEps.split('/episode/')[1].split('-episode-')[1];
     return nextEps.match(/\d+/)[0];
 };
 const getNextEpisode = ($) => {
     if (!$('.flir a:last').attr('href')?.includes(`/episode/`)) return null;
     var nextEps = $('.flir a:last').attr('href');
-    nextEps = nextEps.split('/episode/')[1];
+    nextEps = nextEps.split('/episode/')[1].split('-episode-')[1];
     return nextEps.match(/\d+/)[0];
 };
 const getAnimeData = ($) => {
