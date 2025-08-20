@@ -1,6 +1,7 @@
 import { load } from 'cheerio';
+import axios from 'axios';
 const { BASEURL } = process.env ?? 'https://otakudesu.best';
-const scrapeEpisode = (html) => {
+const scrapeEpisode = async (html) => {
     const $ = load(html);
     const episode = getEpisodeTitle($);
     const stream_url = getStreamUrl($);
@@ -8,6 +9,7 @@ const scrapeEpisode = (html) => {
     const previous_episode = getPrevEpisode($);
     const next_episode = getNextEpisode($);
     const anime = getAnimeData($);
+    const qualityList = await getStreamQuality($);
     if (!episode)
         return undefined;
     return {
@@ -18,12 +20,91 @@ const scrapeEpisode = (html) => {
         has_previous_episode: previous_episode ? true : false,
         previous_episode,
         stream_url,
+        steramList : qualityList,
         download_urls,
     };
 };
 const getEpisodeTitle = ($) => {
     return $('.venutama .posttl').text();
 };
+
+const postToGetData = async(action, action2, videoData) => {
+    let results = {};
+    for (const key in videoData) {
+        const value = videoData[key];
+        if(!value) continue;
+    
+        const form = new FormData();
+        form.append("id", value.id);
+        form.append("i", value.i);
+        form.append("q", value.q);
+        form.append("action", action); // sesuaikan action
+
+        const url = `https://otakudesu.best/wp-admin/admin-ajax.php`;
+        console.log(url)
+        try {
+          let res = await axios.post(url, form, {
+            headers:{
+                'Accept': '*/*',
+                'Accept-Encoding': 'deflate, gzip',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+                'Host': 'otakudesu.best',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          });
+          const form2 = new FormData();
+          form2.append("id", value.id);
+          form2.append("i", value.i);
+          form2.append("q", value.q);
+          form2.append("action", action2);
+          form2.append('nonce', res.data.data);
+          res = await axios.post(url, form2, {
+            headers:{
+                'Accept': '*/*',
+                'Accept-Encoding': 'deflate, gzip',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+                'Host': 'otakudesu.best',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          });
+          const $$ = load(Buffer.from(res.data.data, "base64").toString("utf8"));
+          results[key.replace('m', '')] = $$('iframe').attr('src');
+        } catch (err) {
+          console.error(`${key} error:`, err.message);
+        }
+    }
+    return results;
+}
+
+const getStreamQuality = async($) => {
+    const streamLable = $('.mirrorstream');
+    const results = {};
+    ["m360p", "m480p", "m720p"].forEach(q => {
+        const items = streamLable.find(`ul.${q} li a`);
+        const last = items.filter((i, el) => $(el).text().toLowerCase().includes("desu")).first();
+        if (last.length) {
+            results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
+        }else{
+            results[q] = null
+        }
+    });
+    const actions = [];
+    $("script").each((i, el) => {
+        const scriptContent = $(el).html();
+        if (!scriptContent) return;
+        const regex = /action\s*:\s*"([a-z0-9]+)"/gi;
+        let match;
+        while ((match = regex.exec(scriptContent)) !== null) {
+          actions.push(match[1]);
+        }
+    });
+    const uniqueActions = [...new Set(actions)];
+    const init = uniqueActions[1];
+    const action = uniqueActions[0];
+    const data = await postToGetData(init, action, results);
+    return data;
+};
+
 const getStreamUrl = ($) => {
     return $('#pembed iframe').attr('src');
 };
