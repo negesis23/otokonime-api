@@ -81,7 +81,7 @@ const getStreamQuality = async($) => {
     const results = {};
     ["m360p", "m480p", "m720p"].forEach(q => {
         const items = streamLable.find(`ul.${q} li a`);
-        const last = items.filter((i, el) => $(el).text().toLowerCase().includes("desu")).first();
+        const last = items.filter((i, el) => $(el).text().toLowerCase().match(/desu|otaku/)).first();
         if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
         }else{
@@ -200,3 +200,4 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
