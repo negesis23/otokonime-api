@@ -6,6 +6,7 @@ const scrapeEpisode = async (html) => {
     const episode = getEpisodeTitle($);
     const download_urls = createDownloadData($);
     const previous_episode = getPrevEpisode($);
+    const stream_url = getStreamUrl($);
     const next_episode = getNextEpisode($);
     const anime = getAnimeData($);
     const qualityList = await getStreamQuality($);
@@ -18,13 +19,17 @@ const scrapeEpisode = async (html) => {
         next_episode,
         has_previous_episode: previous_episode ? true : false,
         previous_episode,
-        stream_url: qualityList['480p'],
+        stream_url: qualityList['480p'] || stream_url,
         steramList : qualityList,
         download_urls,
     };
 };
 const getEpisodeTitle = ($) => {
     return $('.venutama .posttl').text();
+};
+
+const getStreamUrl = ($) => {
+    return $('#pembed iframe').attr('src');
 };
 
 const postToGetData = async (action, action2, videoData) => {
@@ -74,11 +79,13 @@ const getStreamQuality = async($) => {
     const results = {};
     ["m360p", "m480p", "m720p"].forEach(q => {
         const items = streamLable.find(`ul.${q} li a`);
-        const last = items.filter((i, el) => $(el).text().toLowerCase().includes("drain")).first();
+        const last = items
+        .filter((i, el) => {
+            const text = $(el).text().toLowerCase();
+            return text.includes("drain") || text.includes("desu");
+        }).first();
         if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
-        }else{
-            results[q] = null
         }
     });
     const actions = [];
