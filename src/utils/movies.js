@@ -8,7 +8,6 @@ const movies = async (page = 1) => {
     const { data } = await axios.get(`${ANOBOY}quick/movie?order_by=latest&page=${page}`,
         {headers: {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-            "accept-encoding": "gzip, deflate, br, zstd",
             "accept-language": "en-US,en;q=0.7",
             "cookie": "sel_timezone_v2=Asia/Bangkok; auto_timezone_v2=yes; full_timezone_v2=+07; short_timezone_v2=+07; preferred_stserver=kuramadrive; should_do_galak=hide; XSRF-TOKEN=eyJpdiI6IlhBYlJkMXRsNkJISEx1Unc2aTRtT3c9PSIsInZhbHVlIjoiam9NRjdNUlhRUjVTUzIwbysyaFdGQTRteklJeE9OTVkxVzNBaGFJL2RwWnRPTVRxMUNYdWZSdFZIdkl5N0RwenYzUjh4QnFMNFhaUEd6L0NDYyt4eUlndnBNYmY5Umx3RXg2Y251NlVvcGVNYklTRGlZTnBKLzV6OWVxc1dpVVAiLCJtYWMiOiI0ZjM1OGFjY2E5ZTA1YWM5Y2I1MDI3ZTZhODM5NzUzMjBiMjVmNzYxNmM5Y2JhN2IwN2I5Yzc1ZjNiYWQyMmYyIiwidGFnIjoiIn0%3D; kuramanime_session=eyJpdiI6IktJOUZtbUo1NTJ6eGt4UTM5WjBHOEE9PSIsInZhbHVlIjoiSTdld3BNYjByYjVUY0JkcHl0Ukc5TnF0c09nZTgvcEhqcmtNYk15UVcyZlFHYlQ2R2tMcHNDcll5ZkVzMmZEWXdwc01CWnc1RVJRaFRTdy8rNEN3N3pDTmtnbzRQTDQ4YzVYT0lXVW00d0hlVWtPUk1WNGZacXBlcmN1N2FYKzMiLCJtYWMiOiI4MTJmYzQ1YzUzYjFmNDdhNDZmNzJjMjViM2Y1NGJkNmIyOWEyMmY4ZGViMGM5YTQ4Mzc0NjEwNDJlMGYwMGI0IiwidGFnIjoiIn0%3D",
             "sec-ch-ua": "\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Brave\";v=\"140\"",
@@ -46,4 +45,5 @@ const movies = async (page = 1) => {
     }
 };
 export default movies;
+
 
