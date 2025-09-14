@@ -2,8 +2,8 @@ import { load } from 'cheerio';
 const pagination = (html, anoboy = false) => {
     console.log('isAnoboy', anoboy);
     const $ = load(html);
-    const current_page = anoboy ? parseInt($('.wp-pagenavi .current').text()) : parseInt($('.pagination .pagenavix .page-numbers.current').text());
-    const last_visible_page = anoboy ?  parseInt($('.wp-pagenavi .page.larger:last').text()) : parseInt($('.pagination .pagenavix .page-numbers:last').prev('a.page-numbers').text());
+    const current_page = anoboy ? parseInt($('.current-page').text()) : parseInt($('.pagination .pagenavix .page-numbers.current').text());
+    const last_visible_page = anoboy ?  parseInt($('.page__link').not(':has(i.fa-angle-right)').last().text()) : parseInt($('.pagination .pagenavix .page-numbers:last').prev('a.page-numbers').text());
     const next_page = current_page < last_visible_page ? current_page + 1 : null;
     const previous_page = current_page > 1 ? current_page - 1 : null;
     const has_next_page = current_page < last_visible_page;
