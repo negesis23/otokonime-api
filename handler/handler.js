@@ -197,15 +197,15 @@ const moviesHandler = async (req, res) => {
     return res.status(200).json({ status: 'Ok', data });
 };
 const singleMovieHandler = async (req, res) => {
-    var { year, month, slug } = req.params;
-    slug = `/${year}/${month}/${slug}`;
+    var { year, month } = req.params;
+    const slug = `/${year}/${month}`;
     console.log('slug: ', slug);
     let data;
     try {
         data = await otakudesu.movie(slug);
     }
     catch (e) {
-        console.log(e);
+        console.log(e.message);
         return res.status(500).json({ status: 'Error', message: 'Internal server error' });
     }
     if (!data)
