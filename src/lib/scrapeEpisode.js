@@ -80,10 +80,10 @@ const postToGetData = async (action, action2, videoData) => {
             const pdarin = await axios.get(pdrain_url);
             const $$$ = load(pdarin.data);
             finalUrl = $$$('meta[property="og:video:secure_url"]').attr("content");
-            return [key.replace("m", ""), finalUrl];
+            if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
         finalUrl = await getOtakudesuSource(pdrain_url);
-        return [key.replace("m", ""), finalUrl];
+        if(finalUrl) return [key.replace("m", ""), finalUrl];
       } catch (err) {
         console.error(`${key} error:`, err);
         return;
@@ -217,5 +217,6 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
 
