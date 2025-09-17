@@ -29,7 +29,7 @@ const getEpisodeTitle = ($) => {
 };
 
 const getStreamUrl = ($) => {
-    return $('#pembed iframe').attr('src').replace('/v3/', '/v2/');
+    return $('#pembed iframe').attr('src');
 };
 
 const postToGetData = async (action, action2, videoData) => {
@@ -85,7 +85,7 @@ const getStreamQuality = async($) => {
             return text.includes("drain") || text.includes("desu") || text.includes("otaku");
         }).first();
         if (last.length) {
-            results[q] = JSON.parse(Buffer.from(last.attr("data-content").replace('/v3/', '/v2/'), "base64").toString("utf8"));
+            results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
         }
     });
     const actions = [];
@@ -197,6 +197,7 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
 
 
