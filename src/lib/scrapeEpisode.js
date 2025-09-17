@@ -32,6 +32,23 @@ const getStreamUrl = ($) => {
     return $('#pembed iframe').attr('src');
 };
 
+const getOtakudesuSource = async(url) => {
+    const { data } = await axios.get(url, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+    const $ = load(data);
+  
+    const script = $("script")
+      .map((i, el) => $(el).html())
+      .get()
+      .find(s => s.includes("otakudesu("));
+  
+    if (!script) return null;
+  
+    const match = script.match(/otakudesu\('(.*?)'\)/s);
+    return match ? JSON.parse(match[1]).file : null;
+};
+
 const postToGetData = async (action, action2, videoData) => {
     const tasks = Object.entries(videoData).map(async ([key, value]) => {
       if (!value) return [key, null];
@@ -58,14 +75,17 @@ const postToGetData = async (action, action2, videoData) => {
         });
         const $$ = load(Buffer.from(res.data.data, "base64").toString("utf8"));
         const pdrain_url = $$("iframe").attr("src");
-  
-        const pdarin = await axios.get(pdrain_url);
-        const $$$ = load(pdarin.data);
-        const finalUrl = $$$('meta[property="og:video:secure_url"]').attr("content");
-  
+        let finalUrl = pdrain_url;
+        if(pdrain_url.includes('drain')){
+            const pdarin = await axios.get(pdrain_url);
+            const $$$ = load(pdarin.data);
+            finalUrl = $$$('meta[property="og:video:secure_url"]').attr("content");
+            return [key.replace("m", ""), finalUrl];
+        }
+        finalUrl = await getOtakudesuSource(pdrain_url);
         return [key.replace("m", ""), finalUrl];
       } catch (err) {
-        console.error(`${key} error:`, err.message);
+        console.error(`${key} error:`, err);
         return [key, null];
       }
     });
@@ -82,7 +102,7 @@ const getStreamQuality = async($) => {
         const last = items
         .filter((i, el) => {
             const text = $(el).text().toLowerCase();
-            return text.includes("drain") || text.to.includes("desu") || text.includes("otaku");
+            return text.includes("drain") || text.includes("desu");
         }).first();
         if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
@@ -197,9 +217,3 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
-
-
-
-
-
-
