@@ -82,7 +82,7 @@ const getOtakudesuSource = async(url) => {
         if (!script) return null;
         
         const match = script.match(/otakudesu\('(.*?)'\)/s);
-        return match ? JSON.parse(match[1]).file : null;
+        return match ? `${JSON.parse(match[1]).file}&supportsAllDrives=true` : null;
     }catch(err){
         console.log(err.message)
     }
@@ -289,4 +289,5 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
