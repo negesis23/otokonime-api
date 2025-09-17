@@ -137,7 +137,7 @@ const postToGetData = async (action, action2, videoData) => {
         }
         finalUrl = await getOtakudesuSource(pdrain_url);
         if(!finalUrl){
-            if(pdrain_url.includes('ondesu/hd')) {
+            if(pdrain_url.includes('ondesu/hd') || pdrain_url.includes('/otakuplay/') {
                 finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
             }else{
                 finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
@@ -279,3 +279,4 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
