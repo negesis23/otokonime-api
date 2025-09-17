@@ -29,7 +29,7 @@ const getEpisodeTitle = ($) => {
 };
 
 const getStreamUrl = ($) => {
-    return $('#pembed iframe').attr('src');
+    return ($('#pembed iframe').attr('src') || '').replace(/\/v\d+\//, '/v5/');
 };
 
 const getOtakudesuSource = async(url) => {
