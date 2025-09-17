@@ -32,21 +32,70 @@ const getStreamUrl = ($) => {
     return ($('#pembed iframe').attr('src') || '').replace(/\/v\d+\//, '/v5/');
 };
 
+const getBloggerSource = async(url) => {
+    try{
+        const blogger = await axios.get(url, {
+            headers: {
+              'Host': 'desustream.info',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+              'Upgrade-Insecure-Requests': '1',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+              'Sec-Fetch-Dest': 'document',
+              'Sec-Fetch-Mode': 'navigate',
+              'Sec-Fetch-Site': 'none',
+              'Sec-Fetch-User': '?1',
+              'Sec-GPC': '1',
+              'Sec-CH-UA': '"Not)A;Brand";v="8", "Chromium";v="138", "Brave";v="138"',
+              'Sec-CH-UA-Mobile': '?0',
+              'Sec-CH-UA-Platform': '"Windows"',
+              'Connection': 'keep-alive',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': '*',
+              'Access-Control-Allow-Methods': '*',
+              'Access-Control-Allow-Credentials': 'true',
+            },
+        });
+        const $$ = load(blogger.data);
+        return `/stream?url=${$$('#myIframe').attr('src')}`;
+    }catch(err){
+        //do nothing
+    }
+};
+
 const getOtakudesuSource = async(url) => {
-    const { data } = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
-    const $ = load(data);
-  
-    const script = $("script")
-      .map((i, el) => $(el).html())
-      .get()
-      .find(s => s.includes("otakudesu("));
-  
-    if (!script) return null;
-  
-    const match = script.match(/otakudesu\('(.*?)'\)/s);
-    return match ? JSON.parse(match[1]).file : null;
+    try{
+        const { data } = await axios.get(url, {
+            headers: { "User-Agent": "Mozilla/5.0" }
+        });
+        const $ = load(data);
+        const script = $("script").map((i, el) => $(el).html()).get().find(s => s.includes("otakudesu("));
+        
+        if (!script) return null;
+        
+        const match = script.match(/otakudesu\('(.*?)'\)/s);
+        return match ? JSON.parse(match[1]).file : null;
+    }catch(err){
+        console.log(err.message)
+    }
+};
+
+const getArchivSource = async (url) => {
+    try {
+        const { data } = await axios.get(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+        const $ = load(data);
+        const script = $("script").map((i, el) => $(el).html()).get().find(s => s?.includes("var vs ="));
+        if (!script) return null;
+
+        const match = script.match(/var\s+vs\s*=\s*(\{[\s\S]*?\});/);
+        if (!match) return null;
+
+        return Function(`"use strict"; return (${match[1]}).file;`)();
+    } catch (err) {
+        console.error("Error:", err.message);
+        return null;
+    }
 };
 
 const postToGetData = async (action, action2, videoData) => {
@@ -76,6 +125,10 @@ const postToGetData = async (action, action2, videoData) => {
         const $$ = load(Buffer.from(res.data.data, "base64").toString("utf8"));
         const pdrain_url = $$("iframe").attr("src");
         let finalUrl = pdrain_url;
+        if(pdrain_url.includes('/arcg/')){
+            finalUrl = await getArchivSource(pdrain_url);
+            if(finalUrl) return [key.replace("m", ""), finalUrl];
+        }
         if(pdrain_url.includes('drain')){
             const pdarin = await axios.get(pdrain_url);
             const $$$ = load(pdarin.data);
@@ -83,7 +136,15 @@ const postToGetData = async (action, action2, videoData) => {
             if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
         finalUrl = await getOtakudesuSource(pdrain_url);
-        if(finalUrl) return [key.replace("m", ""), finalUrl];
+        if(!finalUrl){
+            if(pdrain_url.includes('ondesu/hd')) {
+                finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
+            }else{
+                finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
+            }
+        }
+        finalUrl = await getBloggerSource(finalUrl);
+        return [key.replace("m", ""), finalUrl];
       } catch (err) {
         console.error(`${key} error:`, err);
         return;
@@ -102,9 +163,10 @@ const getStreamQuality = async($) => {
         const last = items
         .filter((i, el) => {
             const text = $(el).text().toLowerCase();
-            return text.includes("drain") || text.includes("desu");
+            return /odstream|desu/.test(text);
         }).first();
         if (last.length) {
+            console.log(q, last.text())
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
         }
     });
@@ -217,6 +279,3 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
-
-
-
