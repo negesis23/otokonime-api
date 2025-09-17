@@ -142,7 +142,10 @@ const postToGetData = async (action, action2, videoData) => {
             finalUrl = $$$('meta[property="og:video:secure_url"]').attr("content");
             if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
-        finalUrl = await getOtakudesuSource(pdrain_url);
+        if(pdrain_url.includes('player.php')){
+            finalUrl = await getOtakudesuSource(pdrain_url);
+            if(finalUrl) return [key.replace("m", ""), finalUrl];
+        }
         if(!finalUrl){
             if(/ondesu\/hd|\/otakuplay\//.test(pdrain_url)) {
                 finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
@@ -286,8 +289,3 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
-
-
-
-
-
