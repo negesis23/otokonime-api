@@ -86,7 +86,6 @@ const postToGetData = async (action, action2, videoData) => {
         return [key.replace("m", ""), finalUrl];
       } catch (err) {
         console.error(`${key} error:`, err);
-        return [key, null];
       }
     });
   
@@ -217,3 +216,4 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
