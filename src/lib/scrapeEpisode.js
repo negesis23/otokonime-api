@@ -29,7 +29,7 @@ const getEpisodeTitle = ($) => {
 };
 
 const getStreamUrl = ($) => {
-    return $('#pembed iframe').attr('src');
+    return $('#pembed iframe').attr('src').replace('/v3/', '/v2/');
 };
 
 const postToGetData = async (action, action2, videoData) => {
@@ -197,4 +197,5 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
