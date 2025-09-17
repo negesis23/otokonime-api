@@ -81,8 +81,8 @@ const getOtakudesuSource = async(url) => {
         
         if (!script) return null;
         
-        const match = script.match(/otakudesu\('(.*?)'\)/s);
-        return match ? JSON.parse(match[1]).file : null;
+        const match = script.match(/otakudesu\('(.*?)'\)/s)
+        return match ? `https://drive.google.com/uc?export=download&id=${JSON.parse(match[1]).file.match(/\/files\/([a-zA-Z0-9_-]+)/)}` : null;
     }catch(err){
         console.log(err.message)
     }
@@ -289,3 +289,4 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
