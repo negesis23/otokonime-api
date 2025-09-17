@@ -65,7 +65,8 @@ const getBloggerSource = async(url) => {
             },
         });
         const $$ = load(blogger.data);
-        return `/stream?url=${$$('#myIframe').attr('src')}`;
+        const urlparsed = new URL($$('#myIframe').attr('src'));
+        return `/blog/${urlparsed.searchParams.get('token')}`;
     }catch(err){
         //do nothing
     }
@@ -147,12 +148,10 @@ const postToGetData = async (action, action2, videoData) => {
             finalUrl = await getOtakudesuSource(pdrain_url);
             if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
-        if(!finalUrl){
-            if(/ondesu\/hd|\/otakuplay\//.test(pdrain_url)) {
-                finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
-            }else{
-                finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
-            }
+        if(/ondesu\/hd|\/otaku/.test(pdrain_url)) {
+            finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
+        }else{
+            finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
         }
         finalUrl = await getBloggerSource(finalUrl);
         return [key.replace("m", ""), finalUrl];
@@ -174,10 +173,10 @@ const getStreamQuality = async($) => {
         const last = items
         .filter((i, el) => {
             const text = $(el).text().toLowerCase();
+            if(q == 'm720p') return /otaku|desu/.test(text);
             return /odstream|desu/.test(text);
         }).first();
         if (last.length) {
-            console.log(q, last.text())
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
         }
     });
