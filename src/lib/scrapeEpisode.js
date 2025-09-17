@@ -85,7 +85,7 @@ const getStreamQuality = async($) => {
             return text.includes("drain") || text.includes("desu");
         }).first();
         if (last.length) {
-            results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
+            results[q] = JSON.parse(Buffer.from(last.attr("data-content").replace('/v3/', '/v2/'), "base64").toString("utf8"));
         }
     });
     const actions = [];
@@ -197,3 +197,4 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
