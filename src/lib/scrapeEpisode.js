@@ -82,7 +82,7 @@ const getStreamQuality = async($) => {
         const last = items
         .filter((i, el) => {
             const text = $(el).text().toLowerCase();
-            return text.includes("drain") || text.includes("desu");
+            return text.includes("drain") || text.includes("desu") || text.includes("otaku");
         }).first();
         if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content").replace('/v3/', '/v2/'), "base64").toString("utf8"));
@@ -197,5 +197,6 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
 
