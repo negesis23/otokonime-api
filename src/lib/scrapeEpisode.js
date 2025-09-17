@@ -6,7 +6,7 @@ const scrapeEpisode = async (html) => {
     const episode = getEpisodeTitle($);
     const download_urls = createDownloadData($);
     const previous_episode = getPrevEpisode($);
-    const stream_url = getStreamUrl($);
+    const stream_url = await getStreamUrl($);
     const next_episode = getNextEpisode($);
     const anime = getAnimeData($);
     const qualityList = await getStreamQuality($);
@@ -286,6 +286,7 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
 
 
