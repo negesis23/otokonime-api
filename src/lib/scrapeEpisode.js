@@ -28,8 +28,15 @@ const getEpisodeTitle = ($) => {
     return $('.venutama .posttl').text();
 };
 
-const getStreamUrl = ($) => {
-    return ($('#pembed iframe').attr('src') || '').replace(/\/v\d+\//, '/v5/');
+const getStreamUrl = async($) => {
+    const src = $('#pembed iframe').attr('src') || '';
+    let url;
+    if (/ondesu\/hd|\/otakuplay\//.test(src)) {
+        url = src.replace(/\/v\d+\//, '/v2/');
+    } else {
+        url = src.replace(/\/v\d+\//, '/v5/');
+    }
+    return await getBloggerSource(url)
 };
 
 const getBloggerSource = async(url) => {
@@ -279,6 +286,7 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
 
 
