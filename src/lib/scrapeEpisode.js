@@ -77,12 +77,14 @@ const postToGetData = async (action, action2, videoData) => {
 const getStreamQuality = async($) => {
     const streamLable = $('.mirrorstream');
     const results = {};
+    const dev = {};
     ["m360p", "m480p", "m720p"].forEach(q => {
         const items = streamLable.find(`ul.${q} li a`);
         const last = items
         .filter((i, el) => {
             const text = $(el).text().toLowerCase();
-            return text.includes("drain") || text.includes("desu") || text.includes("otaku");
+            dev[text] = i;
+            return text.includes("drain") || text.to.includes("desu") || text.includes("otaku");
         }).first();
         if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
@@ -102,6 +104,7 @@ const getStreamQuality = async($) => {
     const init = uniqueActions[1];
     const action = uniqueActions[0];
     const data = await postToGetData(init, action, results);
+    data.dev = dev;
     return data;
 };
 
@@ -197,6 +200,7 @@ const getAnimeData = ($) => {
     };
 };
 export default scrapeEpisode;
+
 
 
 
