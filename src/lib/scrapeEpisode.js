@@ -149,7 +149,7 @@ const postToGetData = async (action, action2, videoData) => {
             finalUrl = await getOtakudesuSource(pdrain_url);
             if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
-        if(/ondesu\/hd|\/otaku|\/dstream\/desudesu\/v3/.test(pdrain_url)) {
+        if(/ondesu\/hd|\/otaku|\/dstream\/desudesu\/v3|\/desudesuhd3|\/playdesu|desuplay/.test(pdrain_url)) {
             finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
         }else{
             finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
