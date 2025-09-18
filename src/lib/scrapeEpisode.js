@@ -149,7 +149,7 @@ const postToGetData = async (action, action2, videoData) => {
             finalUrl = await getOtakudesuSource(pdrain_url);
             if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
-        if(/ondesu\/hd|\/otaku|\/dstream\/desudesu\/v3|\/desudesuhd3|play|watch/.test(pdrain_url)) {
+        if(/ondesu\/hd|\/otaku|\/dstream\/desudesu\/v3|\/desudesuhd3|play|watch|odesu/.test(pdrain_url)) {
             finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
         }else{
             finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
@@ -175,7 +175,7 @@ const getStreamQuality = async($) => {
         .filter((i, el) => {
             const text = $(el).text().toLowerCase();
             if(q == 'm720p') return /otaku|desu/.test(text);
-            return /odstream|desu/.test(text);
+            return /odstream|desu|otaku/.test(text);
         }).first();
         if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
