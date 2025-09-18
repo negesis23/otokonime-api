@@ -134,6 +134,7 @@ const postToGetData = async (action, action2, videoData) => {
         const $$ = load(Buffer.from(res.data.data, "base64").toString("utf8"));
         const pdrain_url = $$("iframe").attr("src");
         let finalUrl = pdrain_url;
+        console.log(finalUrl)
         if(pdrain_url.includes('/arcg/')){
             finalUrl = await getArchivSource(pdrain_url);
             if(finalUrl) return [key.replace("m", ""), finalUrl];
@@ -148,7 +149,7 @@ const postToGetData = async (action, action2, videoData) => {
             finalUrl = await getOtakudesuSource(pdrain_url);
             if(finalUrl) return [key.replace("m", ""), finalUrl];
         }
-        if(/ondesu\/hd|\/otaku/.test(pdrain_url)) {
+        if(/ondesu\/hd|\/otaku|\/dstream\/desudesu\/v3/.test(pdrain_url)) {
             finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
         }else{
             finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
