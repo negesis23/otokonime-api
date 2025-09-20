@@ -20,7 +20,9 @@ const episode = async ({ episodeSlug, animeSlug, episodeNumber }) => {
               episode: num
             };
         });
-        slug = episodeLists[episodeNumber - 1].slug;
+        const firstEps = parseInt(clean[0].episode);
+        slug = firstEps == 0 ? episodeLists[episodeNumber].slug : episodeLists[episodeNumber - 1].slug;
+        console.log(slug);
     }
     const { data } = await axios.get(`${BASEURL}/episode/${slug}`);
     const result = await scrapeEpisode(data);
