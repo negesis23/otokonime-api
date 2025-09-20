@@ -20,14 +20,7 @@ const episode = async ({ episodeSlug, animeSlug, episodeNumber }) => {
               episode: num
             };
         });
-        const lowEps = clean[0].episode;
-        const isFirst = lowEps === '0' && clean[1].slug.includes("-sub-indo-2");
-        const split = clean[0].slug?.split('-episode-');
-        const topPrefix = split[0];
-        const topSuffix = split[1];
-        const epNumPart = isFirst && episodeNumber === 1 ? '1-sub-indo-2' : `${episodeNumber == 0 ? 1 : episodeNumber}-sub-indo`;
-        slug = `${topPrefix}-episode-${epNumPart}`;
-        console.log(slug, episodeNumber)
+        slug = episodeLists[episodeNumber - 1].slug;
     }
     const { data } = await axios.get(`${BASEURL}/episode/${slug}`);
     const result = await scrapeEpisode(data);
