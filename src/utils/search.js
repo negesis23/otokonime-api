@@ -2,7 +2,7 @@ import axios from 'axios';
 import scrapesearchresult from '../lib/scrapeSearchResult.js';
 const BASEURL = process.env.BASEURL   || 'https://otakudesu.best';
 const search = async (keyword) => {
-    const response = await axios.get(`${BASEURL}/`,`s=${keyword}&post_type=anime`,{
+    const response = await axios.post(`${BASEURL}/`,`s=${keyword}&post_type=anime`,{
         headers: {
           "Accept": "*/*",
           "Accept-Encoding": "deflate, gzip",
@@ -16,4 +16,5 @@ const search = async (keyword) => {
     return searchResult;
 };
 export default search;
+
 
