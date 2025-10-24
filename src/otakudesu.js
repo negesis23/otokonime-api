@@ -11,6 +11,7 @@ import genreLists from './utils/genreLists.js';
 import animeByGenre from './utils/animeByGenre.js';
 import movies from './utils/movies.js';
 import movie from './utils/movie.js';
+import jadwalRilis from './utils/jadwalRilis.js';
 export default {
     home,
     movies,
@@ -23,5 +24,6 @@ export default {
     completeAnime,
     batch,
     genreLists,
-    animeByGenre
+    animeByGenre,
+    jadwalRilis
 };

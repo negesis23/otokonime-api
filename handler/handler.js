@@ -78,6 +78,30 @@ const singleAnimeHandler = async (req, res) => {
         return res.status(404).json({ status: 'Error', message: 'There\'s nothing here ;_;' });
     return res.status(200).json({ status: 'Ok', data });
 };
+
+/**
+ * Handler untuk mengambil data jadwal rilis.
+ */
+const jadwalRilisHandler = async (_, res) => {
+    let data;
+    try {
+        // Panggil fungsi jadwalRilis dari modul otakudesu
+        data = await otakudesu.jadwalRilis();
+    }
+    catch (e) {
+        console.log(e);
+        // Jika terjadi error, kirim respons server error
+        return res.status(500).json({ status: 'Error', message: 'Internal server error' });
+    }
+
+    // Jika data tidak ditemukan (mungkin karena error scraping)
+    if (!data || data.length === 0) {
+        return res.status(404).json({ status: 'Error', message: 'There\'s nothing here ;_;' });
+    }
+
+    // Kirim data jika berhasil
+    return res.status(200).json({ status: 'Ok', data });
+};
 const episodesHandler = async (req, res) => {
     const { slug } = req.params;
     let data;
@@ -227,5 +251,6 @@ export default {
     batchByBatchSlugHandler,
     batchHandler,
     genreListsHandler,
-    animeByGenreHandler
+    animeByGenreHandler,
+    jadwalRilisHandler
 };

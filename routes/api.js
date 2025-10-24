@@ -62,5 +62,6 @@ api.get('/genres', handler.genreListsHandler);
 api.get('/genres/:slug/:page?', handler.animeByGenreHandler);
 api.get('/movies/:page', handler.moviesHandler);
 api.get('/movies/:year/:month/:slug', handler.singleMovieHandler);
+api.get('/jadwal-rilis', handler.jadwalRilisHandler);
 
 export default api;
