@@ -78,6 +78,18 @@ const singleAnimeHandler = async (req, res) => {
         return res.status(404).json({ status: 'Error', message: 'There\'s nothing here ;_;' });
     return res.status(200).json({ status: 'Ok', data });
 };
+
+const jadwalRilisHandler = async (_, res) => {
+    let data;
+    try {
+        data = await otakudesu.jadwalRilis();
+    }
+    catch (e) {
+        console.log(e);
+        return res.status(500).json({ status: 'Error', message: 'Internal server error' });
+    }
+    return res.status(200).json({ status: 'Ok', data });
+};
 const episodesHandler = async (req, res) => {
     const { slug } = req.params;
     let data;
@@ -227,5 +239,6 @@ export default {
     batchByBatchSlugHandler,
     batchHandler,
     genreListsHandler,
-    animeByGenreHandler
+    animeByGenreHandler,
+    jadwalRilisHandler
 };
