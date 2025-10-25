@@ -8,18 +8,21 @@ const scrapeEpisode = async (html) => {
     const previous_episode = getPrevEpisode($);
     const stream_url = await getStreamUrl($);
     const next_episode = getNextEpisode($);
-    const anime = getAnimeData($);
+    const anime = getAnimeData($); // Fungsi ini yang kita perbaiki
     const qualityList = await getStreamQuality($);
     if (!episode)
         return undefined;
     return {
         episode,
         anime,
-        has_next_episode: next_episode ? true : false,
+        has_next_episode: next_episode ?
+true : false,
         next_episode,
-        has_previous_episode: previous_episode ? true : false,
+        has_previous_episode: previous_episode ?
+true : false,
         previous_episode,
-        stream_url: qualityList['480p'] || stream_url,
+        stream_url: qualityList['480p'] ||
+stream_url,
         steramList : qualityList,
         download_urls,
     };
@@ -27,7 +30,6 @@ const scrapeEpisode = async (html) => {
 const getEpisodeTitle = ($) => {
     return $('.venutama .posttl').text();
 };
-
 const getStreamUrl = async($) => {
     const src = $('#pembed iframe').attr('src') || '';
     let url;
@@ -38,7 +40,6 @@ const getStreamUrl = async($) => {
     }
     return await getBloggerSource(url)
 };
-
 const getBloggerSource = async(url) => {
     try{
         const blogger = await axios.get(url, {
@@ -46,20 +47,23 @@ const getBloggerSource = async(url) => {
               'Host': 'desustream.info',
               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
               'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache',
+
+ 'Pragma': 'no-cache',
               'Upgrade-Insecure-Requests': '1',
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
               'Sec-Fetch-Dest': 'document',
               'Sec-Fetch-Mode': 'navigate',
               'Sec-Fetch-Site': 'none',
-              'Sec-Fetch-User': '?1',
+
+  'Sec-Fetch-User': '?1',
               'Sec-GPC': '1',
               'Sec-CH-UA': '"Not)A;Brand";v="8", "Chromium";v="138", "Brave";v="138"',
               'Sec-CH-UA-Mobile': '?0',
               'Sec-CH-UA-Platform': '"Windows"',
               'Connection': 'keep-alive',
               'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Headers': '*',
+
+         'Access-Control-Allow-Headers': '*',
               'Access-Control-Allow-Methods': '*',
               'Access-Control-Allow-Credentials': 'true',
             },
@@ -68,10 +72,8 @@ const getBloggerSource = async(url) => {
         const urlparsed = new URL($$('#myIframe').attr('src'));
         return `/blog/${urlparsed.searchParams.get('token')}`;
     }catch(err){
-        //do nothing
     }
 };
-
 const getOtakudesuSource = async(url) => {
     try{
         const { data } = await axios.get(url, {
@@ -79,9 +81,7 @@ const getOtakudesuSource = async(url) => {
         });
         const $ = load(data);
         const script = $("script").map((i, el) => $(el).html()).get().find(s => s.includes("otakudesu("));
-        
         if (!script) return null;
-        
         const match = script.match(/otakudesu\('(.*?)'\)/s)
         const vid = JSON.parse(match[1]).file.match(/\/files\/([a-zA-Z0-9_-]+)/);
         return match ? `/gdrive/${vid[1]}` : null;
@@ -89,35 +89,32 @@ const getOtakudesuSource = async(url) => {
         console.log(err.message)
     }
 };
-
 const getArchivSource = async (url) => {
     try {
-        const { data } = await axios.get(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+        const { data } = await axios.get(url,
+{ headers: { "User-Agent": "Mozilla/5.0" } });
         const $ = load(data);
         const script = $("script").map((i, el) => $(el).html()).get().find(s => s?.includes("var vs ="));
         if (!script) return null;
-
         const match = script.match(/var\s+vs\s*=\s*(\{[\s\S]*?\});/);
         if (!match) return null;
-
         return Function(`"use strict"; return (${match[1]}).file;`)();
     } catch (err) {
         console.error("Error:", err.message);
-        return null;
+
+    return null;
     }
 };
-
 const postToGetData = async (action, action2, videoData) => {
     const tasks = Object.entries(videoData).map(async ([key, value]) => {
       if (!value) return [key, null];
-      try {
+    try {
         const url = `https://otakudesu.best/wp-admin/admin-ajax.php`;
         const form = new URLSearchParams();
         form.append("id", value.id);
         form.append("i", value.i);
         form.append("q", value.q);
         form.append("action", action);
-  
         let res = await axios.post(url, form.toString(), {
           headers: { "Content-Type": "application/x-www-form-urlencoded" }
         });
@@ -127,7 +124,6 @@ const postToGetData = async (action, action2, videoData) => {
         form2.append("q", value.q);
         form2.append("action", action2);
         form2.append("nonce", res.data.data);
-  
         res = await axios.post(url, form2.toString(), {
           headers: { "Content-Type": "application/x-www-form-urlencoded" }
         });
@@ -156,16 +152,14 @@ const postToGetData = async (action, action2, videoData) => {
         }
         finalUrl = await getBloggerSource(finalUrl);
         return [key.replace("m", ""), finalUrl];
-      } catch (err) {
+    } catch (err) {
         console.error(`${key} error:`, err);
         return;
       }
     });
-  
     const resultsArr = await Promise.all(tasks);
     return Object.fromEntries(resultsArr.filter(Boolean));
   };
-
 const getStreamQuality = async($) => {
     const streamLable = $('.mirrorstream');
     const results = {};
@@ -177,7 +171,8 @@ const getStreamQuality = async($) => {
             if(q == 'm720p') return /otaku|desu/.test(text);
             return /odstream|desu|otaku/.test(text);
         }).first();
-        if (last.length) {
+
+       if (last.length) {
             results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
         }
     });
@@ -197,7 +192,6 @@ const getStreamQuality = async($) => {
     const data = await postToGetData(init, action, results);
     return data;
 };
-
 const createDownloadData = ($) => {
     const mp4 = getMp4DownloadUrls($);
     const mkv = getMkvDownloadUrls($);
@@ -276,17 +270,30 @@ const getNextEpisode = ($) => {
     nextEps = nextEps.split('/episode/')[1].split('-episode-')[1];
     return nextEps.match(/\d+/)[0];
 };
+
+// --- AWAL PERUBAHAN ---
+/**
+ * Mengambil data anime dari halaman episode.
+ * Menggunakan attribute selector [href*="/anime/"] untuk menemukan
+ * link "See All Episodes" yang pasti mengarah ke halaman utama anime.
+ */
 const getAnimeData = ($) => {
-    if ($('.flir a:nth-child(3)').text().trim() === '' || $('.flir a:nth-child(3)').text() === undefined) {
-        
-        return {
-            slug: $('.flir a:first').attr('href')?.replace(`${BASEURL}/anime/`, '')?.replace('/', ''),
-            otakudesu_url: $('.flir a:first').attr('href'),
-        };
-    }
+    // Cari link "See All Episodes" yang selalu mengarah ke halaman anime
+    const animeLinkElement = $('.flir a[href*="/anime/"]');
+
+    const otakudesu_url = animeLinkElement.attr('href');
+
+    // Gunakan regex yang konsisten dengan scraper lain untuk mendapatkan slug
+    // (Regex diambil dari file lain seperti scrapeSearchResult [cite: 486])
+    const slug = otakudesu_url
+        ?.replace(/^https:\/\/otakudesu\.[a-zA-Z0-9-]+\/anime\//, '')
+        .replace('/', '');
+
     return {
-        slug: $('.flir a:nth-child(2)').attr('href')?.replace(`${BASEURL}/anime/`, '')?.replace('/', ''),
-        otakudesu_url: $('.flir a:nth-child(2)').attr('href'),
+        slug: slug,
+        otakudesu_url: otakudesu_url,
     };
 };
+// --- AKHIR PERUBAHAN ---
+
 export default scrapeEpisode;
