@@ -1,299 +1,195 @@
 import { load } from 'cheerio';
-import axios from 'axios';
-const { BASEURL } = process.env ?? 'https://otakudesu.best';
-const scrapeEpisode = async (html) => {
-    const $ = load(html);
-    const episode = getEpisodeTitle($);
-    const download_urls = createDownloadData($);
-    const previous_episode = getPrevEpisode($);
-    const stream_url = await getStreamUrl($);
-    const next_episode = getNextEpisode($);
-    const anime = getAnimeData($); // Fungsi ini yang kita perbaiki
-    const qualityList = await getStreamQuality($);
-    if (!episode)
-        return undefined;
-    return {
-        episode,
-        anime,
-        has_next_episode: next_episode ?
-true : false,
-        next_episode,
-        has_previous_episode: previous_episode ?
-true : false,
-        previous_episode,
-        stream_url: qualityList['480p'] ||
-stream_url,
-        steramList : qualityList,
-        download_urls,
-    };
-};
-const getEpisodeTitle = ($) => {
-    return $('.venutama .posttl').text();
-};
-const getStreamUrl = async($) => {
-    const src = $('#pembed iframe').attr('src') || '';
-    let url;
-    if (/ondesu\/hd|\/otakuplay\//.test(src)) {
-        url = src.replace(/\/v\d+\//, '/v2/');
-    } else {
-        url = src.replace(/\/v\d+\//, '/v5/');
-    }
-    return await getBloggerSource(url)
-};
-const getBloggerSource = async(url) => {
-    try{
-        const blogger = await axios.get(url, {
-            headers: {
-              'Host': 'desustream.info',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-              'Cache-Control': 'no-cache',
 
- 'Pragma': 'no-cache',
-              'Upgrade-Insecure-Requests': '1',
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
-              'Sec-Fetch-Dest': 'document',
-              'Sec-Fetch-Mode': 'navigate',
-              'Sec-Fetch-Site': 'none',
-
-  'Sec-Fetch-User': '?1',
-              'Sec-GPC': '1',
-              'Sec-CH-UA': '"Not)A;Brand";v="8", "Chromium";v="138", "Brave";v="138"',
-              'Sec-CH-UA-Mobile': '?0',
-              'Sec-CH-UA-Platform': '"Windows"',
-              'Connection': 'keep-alive',
-              'Access-Control-Allow-Origin': '*',
-
-         'Access-Control-Allow-Headers': '*',
-              'Access-Control-Allow-Methods': '*',
-              'Access-Control-Allow-Credentials': 'true',
-            },
-        });
-        const $$ = load(blogger.data);
-        const urlparsed = new URL($$('#myIframe').attr('src'));
-        return `/blog/${urlparsed.searchParams.get('token')}`;
-    }catch(err){
-    }
-};
-const getOtakudesuSource = async(url) => {
-    try{
-        const { data } = await axios.get(url, {
-            headers: { "User-Agent": "Mozilla/5.0" }
-        });
-        const $ = load(data);
-        const script = $("script").map((i, el) => $(el).html()).get().find(s => s.includes("otakudesu("));
-        if (!script) return null;
-        const match = script.match(/otakudesu\('(.*?)'\)/s)
-        const vid = JSON.parse(match[1]).file.match(/\/files\/([a-zA-Z0-9_-]+)/);
-        return match ? `/gdrive/${vid[1]}` : null;
-    }catch(err){
-        console.log(err.message)
-    }
-};
-const getArchivSource = async (url) => {
-    try {
-        const { data } = await axios.get(url,
-{ headers: { "User-Agent": "Mozilla/5.0" } });
-        const $ = load(data);
-        const script = $("script").map((i, el) => $(el).html()).get().find(s => s?.includes("var vs ="));
-        if (!script) return null;
-        const match = script.match(/var\s+vs\s*=\s*(\{[\s\S]*?\});/);
-        if (!match) return null;
-        return Function(`"use strict"; return (${match[1]}).file;`)();
-    } catch (err) {
-        console.error("Error:", err.message);
-
-    return null;
-    }
-};
-const postToGetData = async (action, action2, videoData) => {
-    const tasks = Object.entries(videoData).map(async ([key, value]) => {
-      if (!value) return [key, null];
-    try {
-        const url = `https://otakudesu.best/wp-admin/admin-ajax.php`;
-        const form = new URLSearchParams();
-        form.append("id", value.id);
-        form.append("i", value.i);
-        form.append("q", value.q);
-        form.append("action", action);
-        let res = await axios.post(url, form.toString(), {
-          headers: { "Content-Type": "application/x-www-form-urlencoded" }
-        });
-        const form2 = new URLSearchParams();
-        form2.append("id", value.id);
-        form2.append("i", value.i);
-        form2.append("q", value.q);
-        form2.append("action", action2);
-        form2.append("nonce", res.data.data);
-        res = await axios.post(url, form2.toString(), {
-          headers: { "Content-Type": "application/x-www-form-urlencoded" }
-        });
-        const $$ = load(Buffer.from(res.data.data, "base64").toString("utf8"));
-        const pdrain_url = $$("iframe").attr("src");
-        let finalUrl = pdrain_url;
-        console.log(finalUrl)
-        if(pdrain_url.includes('/arcg/')){
-            finalUrl = await getArchivSource(pdrain_url);
-            if(finalUrl) return [key.replace("m", ""), finalUrl];
-        }
-        if(pdrain_url.includes('drain')){
-            const pdarin = await axios.get(pdrain_url);
-            const $$$ = load(pdarin.data);
-            finalUrl = $$$('meta[property="og:video:secure_url"]').attr("content");
-            if(finalUrl) return [key.replace("m", ""), finalUrl];
-        }
-        if(pdrain_url.includes('player.php')){
-            finalUrl = await getOtakudesuSource(pdrain_url);
-            if(finalUrl) return [key.replace("m", ""), finalUrl];
-        }
-        if(/ondesu\/hd|\/otaku|desudesu|\/desudesuhd3|play|watch|odesu/.test(pdrain_url)) {
-            finalUrl = pdrain_url.replace(/\/v\d+\//, '/v2/');
-        }else{
-            finalUrl = pdrain_url.replace(/\/v\d+\//, '/v5/');
-        }
-        finalUrl = await getBloggerSource(finalUrl);
-        return [key.replace("m", ""), finalUrl];
-    } catch (err) {
-        console.error(`${key} error:`, err);
-        return;
-      }
-    });
-    const resultsArr = await Promise.all(tasks);
-    return Object.fromEntries(resultsArr.filter(Boolean));
-  };
-const getStreamQuality = async($) => {
-    const streamLable = $('.mirrorstream');
-    const results = {};
-    ["m360p", "m480p", "m720p"].forEach(q => {
-        const items = streamLable.find(`ul.${q} li a`);
-        const last = items
-        .filter((i, el) => {
-            const text = $(el).text().toLowerCase();
-            if(q == 'm720p') return /otaku|desu/.test(text);
-            return /odstream|desu|otaku/.test(text);
-        }).first();
-
-       if (last.length) {
-            results[q] = JSON.parse(Buffer.from(last.attr("data-content"), "base64").toString("utf8"));
-        }
-    });
-    const actions = [];
-    $("script").each((i, el) => {
-        const scriptContent = $(el).html();
-        if (!scriptContent) return;
-        const regex = /action\s*:\s*"([a-z0-9]+)"/gi;
-        let match;
-        while ((match = regex.exec(scriptContent)) !== null) {
-          actions.push(match[1]);
-        }
-    });
-    const uniqueActions = [...new Set(actions)];
-    const init = uniqueActions[1];
-    const action = uniqueActions[0];
-    const data = await postToGetData(init, action, results);
-    return data;
-};
-const createDownloadData = ($) => {
-    const mp4 = getMp4DownloadUrls($);
-    const mkv = getMkvDownloadUrls($);
-    return {
-        mp4,
-        mkv,
-    };
-};
-const getMp4DownloadUrls = ($) => {
-    const result = [];
-    const mp4DownloadEls = $('.download ul:first li')
-        .toString()
-        .split('</li>')
-        .filter((item) => item.trim() !== '')
-        .map((item) => `${item}</li>`);
-    for (const el of mp4DownloadEls) {
-        const $ = load(el);
-        const downloadUrls = $('a')
-            .toString()
-            .split('</a>')
-            .filter((item) => item.trim() !== '')
-            .map((item) => `${item}</a>`);
-        const urls = [];
-        for (const downloadUrl of downloadUrls) {
-            const $ = load(downloadUrl);
-            urls.push({
-                provider: $('a').text(),
-                url: $('a').attr('href'),
-            });
-        }
-        result.push({
-            resolution: $('strong').text()?.replace(/([A-z][A-z][0-9] )/, ''),
-            urls,
-        });
-    }
-    return result;
-};
-const getMkvDownloadUrls = ($) => {
-    const result = [];
-    const mp4DownloadEls = $('.download ul:last li')
-        .toString()
-        .split('</li>')
-        .filter((item) => item.trim() !== '')
-        .map((item) => `${item}</li>`);
-    for (const el of mp4DownloadEls) {
-        const $ = load(el);
-        const downloadUrls = $('a')
-            .toString()
-            .split('</a>')
-            .filter((item) => item.trim() !== '')
-            .map((item) => `${item}</a>`);
-        const urls = [];
-        for (const url of downloadUrls) {
-            const $ = load(url);
-            urls.push({
-                provider: $('a').text(),
-                url: $('a').attr('href'),
-            });
-        }
-        result.push({
-            resolution: $('strong').text()?.replace(/([A-z][A-z][A-z] )/, ''),
-            urls,
-        });
-    }
-    return result;
-};
-const getPrevEpisode = ($) => {
-    if (!$('.flir a:first').attr('href')?.includes(`/episode/`)) return null;
-    var nextEps = $('.flir a:first').attr('href');
-    nextEps = nextEps.split('/episode/')[1].split('-episode-')[1];
-    return nextEps.match(/\d+/)[0];
-};
-const getNextEpisode = ($) => {
-    if (!$('.flir a:last').attr('href')?.includes(`/episode/`)) return null;
-    var nextEps = $('.flir a:last').attr('href');
-    nextEps = nextEps.split('/episode/')[1].split('-episode-')[1];
-    return nextEps.match(/\d+/)[0];
-};
-
-// --- AWAL PERUBAHAN ---
 /**
- * Mengambil data anime dari halaman episode.
- * Menggunakan attribute selector [href*="/anime/"] untuk menemukan
- * link "See All Episodes" yang pasti mengarah ke halaman utama anime.
+ * Mengambil judul episode dari halaman.
+ * @param {import('cheerio').CheerioAPI} $ - Objek Cheerio
+ * @returns {string} Judul episode
+ */
+const getEpisodeTitle = ($) => {
+    return $('.venutama .posttl').text().trim(); // [cite: 414, 421]
+};
+
+/**
+ * Mengambil data anime (slug dan URL) dari halaman episode.
+ * Menggunakan logika yang sudah diperbaiki sebelumnya.
+ * @param {import('cheerio').CheerioAPI} $ - Objek Cheerio
+ * @returns {{slug: string | undefined, otakudesu_url: string | undefined}}
  */
 const getAnimeData = ($) => {
-    // Cari link "See All Episodes" yang selalu mengarah ke halaman anime
-    const animeLinkElement = $('.flir a[href*="/anime/"]');
-
-    const otakudesu_url = animeLinkElement.attr('href');
-
-    // Gunakan regex yang konsisten dengan scraper lain untuk mendapatkan slug
-    // (Regex diambil dari file lain seperti scrapeSearchResult [cite: 486])
+    // Mencari link "See All Episodes" yang memiliki URL anime
+    const animeLinkElement = $('.flir a[href*="/anime/"]'); // [cite: 471]
+    const otakudesu_url = animeLinkElement.attr('href'); // [cite: 472]
+    
+    // Ekstrak slug dari URL
     const slug = otakudesu_url
-        ?.replace(/^https:\/\/otakudesu\.[a-zA-Z0-9-]+\/anime\//, '')
-        .replace('/', '');
+        ?.replace(/^https:\/\/otakudesu\.[a-zA-Z0-9-]+\/anime\//, '') // [cite: 472]
+        .replace('/', ''); // [cite: 472]
 
     return {
-        slug: slug,
-        otakudesu_url: otakudesu_url,
+        slug: slug, // [cite: 473]
+        otakudesu_url: otakudesu_url, // [cite: 473]
     };
 };
-// --- AKHIR PERUBAHAN ---
+
+/**
+ * Mengambil navigasi episode (sebelumnya dan selanjutnya).
+ * @param {import('cheerio').CheerioAPI} $ - Objek Cheerio
+ * @returns {{
+ * has_previous_episode: boolean,
+ * previous_episode_slug: string | null,
+ * has_next_episode: boolean,
+ * next_episode_slug: string | null
+ * }}
+ */
+const getNavigation = ($) => {
+    // Menggunakan selector title yang lebih stabil daripada :first atau :last
+    const prevEl = $('.flir a[title="Episode Sebelumnya"]');
+    const nextEl = $('.flir a[title="Episode Selanjutnya"]');
+
+    // Helper untuk mengekstrak slug dari href
+    const getSlug = (el) => {
+        const href = el.attr('href');
+        // Pastikan linknya adalah link episode
+        if (!href || !href.includes('/episode/')) return null;
+        // Ambil bagian slug setelah '/episode/'
+        return href.split('/episode/')[1]?.replace('/', '');
+    };
+
+    const prevSlug = getSlug(prevEl);
+    const nextSlug = getSlug(nextEl);
+
+    return {
+        has_previous_episode: !!prevSlug, // [cite: 418-419]
+        previous_episode_slug: prevSlug || null, // [cite: 419]
+        has_next_episode: !!nextSlug, // [cite: 417-418]
+        next_episode_slug: nextSlug || null, // [cite: 418]
+    };
+};
+
+/**
+ * Mengambil URL stream default dari iframe utama.
+ * @param {import('cheerio').CheerioAPI} $ - Objek Cheerio
+ * @returns {string | null} URL stream
+ */
+const getDefaultStream = ($) => {
+    return $('#pembed iframe').attr('src') || null; // [cite: 422]
+};
+
+/**
+ * Mengambil semua mirror stream (kualitas dan data ter-obfuscate).
+ * @param {import('cheerio').CheerioAPI} $ - Objek Cheerio
+ * @returns {Array<{quality: string, provider: string, data: Object | null}>}
+ */
+const getStreamMirrors = ($) => {
+    const mirrors = [];
+    // Loop setiap <ul> (m360p, m480p, m720p)
+    $('.mirrorstream ul').each((i, ul) => {
+        const quality = $(ul).attr('class')?.replace('m', '').trim(); // e.g., "360p"
+        if (!quality) return;
+
+        // Loop setiap <li><a> di dalam <ul>
+        $(ul).find('li a').each((j, a) => {
+            const provider = $(a).text().trim();
+            const dataContent = $(a).attr('data-content');
+            let parsedData = null;
+
+            // Dekode data-content (Base64) jika ada
+            if (dataContent) {
+                try {
+                    // [cite: 449]
+                    parsedData = JSON.parse(Buffer.from(dataContent, 'base64').toString('utf8'));
+                } catch (e) {
+                    console.error(`Gagal parse data-content untuk ${provider}: ${e.message}`);
+                }
+            }
+
+            mirrors.push({
+                quality,
+                provider,
+                data: parsedData, // Ini adalah data JSON: { id, i, q }
+            });
+        });
+    });
+    return mirrors;
+};
+
+/**
+ * Mengambil semua link download (MP4, MKV, dll.).
+ * @param {import('cheerio').CheerioAPI} $ - Objek Cheerio
+ * @returns {Array<{format_title: string, formats: Array<Object>}>}
+ */
+const getDownloadLinks = ($) => {
+    const downloadGroups = [];
+    
+    // Loop setiap div.download (biasanya ada 1) [cite: 453]
+    $('.download').each((i, el) => {
+        const formatTitle = $(el).find('h4').text().trim();
+        const formatGroups = [];
+
+        // Loop setiap <ul> (satu untuk MP4, satu untuk MKV) [cite: 455, 462]
+        $(el).find('ul').each((j, ul) => {
+            // Loop setiap <li> (satu untuk tiap resolusi)
+            $(ul).find('li').each((k, li) => {
+                const resolution = $(li).find('strong').text().trim(); // "Mp4 360p" [cite: 460, 467]
+                const size = $(li).find('i').text().trim(); // "34.8 MB" [cite: 405]
+                const providerLinks = [];
+
+                // Loop setiap <a> (link provider)
+                $(li).find('a').each((l, a) => {
+                    providerLinks.push({
+                        provider: $(a).text().trim(), // [cite: 459, 466]
+                        url: $(a).attr('href'), // [cite: 459, 466]
+                    });
+                });
+
+                if (providerLinks.length > 0) {
+                    formatGroups.push({
+                        resolution,
+                        size,
+                        links: providerLinks, // [cite: 460, 467]
+                    });
+                }
+            });
+        });
+
+        downloadGroups.push({
+            format_title: formatTitle,
+            formats: formatGroups,
+        });
+    });
+
+    return downloadGroups;
+};
+
+
+/**
+ * Fungsi utama untuk scrape halaman episode.
+ * Dibuat ulang menjadi sinkron (synchronous) karena tidak lagi
+ * melakukan resolving stream di sisi server.
+ * @param {string} html - Konten HTML halaman episode
+ * @returns {Object | undefined}
+ */
+const scrapeEpisode = (html) => {
+    const $ = load(html);
+
+    const episodeTitle = getEpisodeTitle($); // [cite: 414]
+    // Jika tidak ada judul, anggap halaman tidak valid
+    if (!episodeTitle) return undefined; // [cite: 416]
+
+    const animeData = getAnimeData($); // [cite: 415]
+    const navigation = getNavigation($);
+    const defaultStream = getDefaultStream($);
+    const streamMirrors = getStreamMirrors($);
+    const downloadData = getDownloadLinks($); // [cite: 414]
+
+    return {
+        episode: episodeTitle, // [cite: 417]
+        anime: animeData, // [cite: 417]
+        ...navigation, // Menggabungkan: has_previous_episode, previous_episode_slug, ... [cite: 417-419]
+        stream_url: defaultStream, // URL stream default 
+        streamList: streamMirrors, // Daftar semua mirror (FIX TYPO dari 'steramList') 
+        download_urls: downloadData, // Daftar semua link download 
+    };
+};
 
 export default scrapeEpisode;
